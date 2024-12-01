@@ -1,7 +1,18 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
-const DOMAIN: &str = "https://api.coinex.com";
-const WS_DOMAIN: &str = "wss://socket.coinex.com";
+pub mod account;
+pub mod asset;
+pub mod spot;
+pub mod futures;
+
+pub const DOMAIN: &str = "https://api.coinex.com";
+pub const WS_DOMAIN: &str = "wss://socket.coinex.com";
+
+pub struct Client {
+    master: MasterAPI,
+    accounts: HashMap<String,APIType>,
+
+}
 
 pub struct MasterAPI(APIType);
 impl MasterAPI {
@@ -37,16 +48,16 @@ impl std::ops::Deref for MasterAPI {
 }
 
 pub struct APIAuth {
-    key: String,
-    _secret: String,
+    key: &'static str,
+    _secret: &'static str,
     ip_whitelist: Option<HashSet<String>>,
 }
 
 impl APIAuth {
     pub fn new(key: &str, secret: &str, ip_whitelist: Option<HashSet<String>> ) -> APIAuth {
         APIAuth {
-            key: String::from(key),
-            _secret: String::from(secret),
+            key: String::from(key).leak(),
+            _secret: String::from(secret).leak(),
             ip_whitelist,
         }
     }
@@ -81,7 +92,6 @@ impl APIAuth {
 }
 
 struct Signature(String); //new typing the signature so compiler can yell at me if i dont generate it right
-
 
 pub enum SignPayload {
     HTTP {
